@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import wpilib
 from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand
 
@@ -63,6 +64,10 @@ class MyRobot(TimedCommandRobot):
 
     def testPeriodic(self) -> None:
         pass
+
+
+    def teleopPeriodic(self) -> None:
+        return super().teleopPeriodic()
 
 
 if __name__ == "__main__":
