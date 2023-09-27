@@ -14,7 +14,7 @@ I would also recommend you install the Python Extension for VS Code as well from
 
 Once you have your environment setup, you're ready to start going through the various exercises.  The recommended order is:
 1. Arcade Simulator -- located in arcade_sim directory
-1. Command-Based -- located in commands_sim directory
+1. LED Command-Based -- located in led_subsystem directory
 1.
 1.
 
