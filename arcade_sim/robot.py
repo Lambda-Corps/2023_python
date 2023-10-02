@@ -13,7 +13,6 @@ class MyRobot(TimedCommandRobot):
         button bindings, and operator interface pieces like driver 
         dashboards
         '''
-        self._gyro = wpilib.AnalogGyro(1)
         # Setup the operator interface (typically CommandXboxController)
 
         # Instantiate any subystems
