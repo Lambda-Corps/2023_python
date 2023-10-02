@@ -24,7 +24,9 @@ class PhysicsEngine:
         self._robot_instance = robot
 
         # Create a sim Gyro to be used for maintaining the heading
-        self._gyro = wpilib.simulation.AnalogGyroSim(robot._gyro)
+        # self._gyro = wpilib.simulation.AnalogGyroSim(robot._gyro)
+        self._gyro = wpilib.simulation.SimDeviceSim("navX-Sensor[4]")
+        self.navx_yaw = self._gyro.getDouble("Yaw")
 
         self.position = 0
 
@@ -64,4 +66,4 @@ class PhysicsEngine:
         # Update the gyro simulation
         # -> FRC gyros are positive clockwise, but the returned pose is positive
         #    counter-clockwise
-        self._gyro.setAngle(-pose.rotation().degrees())
+        self.navx_yaw.set(-pose.rotation().degrees())

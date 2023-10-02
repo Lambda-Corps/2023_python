@@ -83,10 +83,19 @@ The high-level steps that you will take to make this happen are:
                 super().__init__()
         ```
 
-    1. Next instantiate two different motor controllers to control the wheens on the left and right sides of the robot respectively. This code simulates two motor controllers that are plugged into the Roborio's PWM ports 1 and 2.
+    1. Import the ***CTRE*** library code at the top of the ***drivetrain.py*** file as well as the ***wpilib.drive*** library for future use.
         ```python
         import wpilib
+        import wpilib.drive
         from commands2 import SubsystemBase
+        import ctre
+        ```
+    1. Next instantiate two different motor controllers to control the wheens on the left and right sides of the robot respectively. This code simulates two motor controllers that are plugged into the CAN bus with IDs 1 and 2..
+        ```python
+        import wpilib
+        import wpilib.drive
+        from commands2 import SubsystemBase
+        import ctre
 
         class DriveTrain(SubsystemBase):
             def __init__(self) -> None:
@@ -104,8 +113,8 @@ The high-level steps that you will take to make this happen are:
 
         ```python
         import wpilib
-        from commands2 import SubsystemBase
         import wpilib.drive
+        from commands2 import SubsystemBase
         import ctre
 
         class DriveTrain(SubsystemBase):
@@ -129,8 +138,8 @@ The high-level steps that you will take to make this happen are:
     1. Now we need to configure the motor controllers to do what we want.  The first step is to set the configuration back to the factory default.  This ensures the controllers are configured as we run them, and we're never running older configurations on the devices.
         ```python
         import wpilib
-        from commands2 import SubsystemBase
         import wpilib.drive
+        from commands2 import SubsystemBase
         import ctre
 
         class DriveTrain(SubsystemBase):
@@ -159,12 +168,16 @@ The high-level steps that you will take to make this happen are:
             def getRightSpeed(self) -> float:
                 return self._lastRightSet
         ```
-        
+    
+    1. Import the ***wpilib.drive*** library to use in our code.  We're going to use it to help calculate the motor output.
+        ```python
+        import wpilib.drive
     1. Next, we'll define a method that will but used by other parts of our robot code that will take two numbers and inputs from the joysticks, and make the robot move in the given direction based on those inputs. The method will be called ***driveManually*** and take two arguments, one argument to represent the percentage of motor output in the forward and backward directions, and one argument to represent the percentage of output for the robot rotation around the Z Axis. Think of viewing the robot from above, the rotation will have the robot spin in place either clockwise or counterclockwise depending on the sign of the number put in (either positive or negative number). The arguments will be of type _float_ which means it will be a number that can b represented as a decimal. The inputs for both forward and turning directions have the range of -1.0 <-> 1.0 (-100% to 100%). This will be done by calculating the robot kinematics of an arcadeDrive set of outputs based on those inputs. This means that given the two inputs representing the forward and turning speeds, calculate the output that would be applied to the left and right sides to make that move happen.
         ```python
         import wpilib
-        from commands2 import SubsystemBase
         import wpilib.drive
+        from commands2 import SubsystemBase
+        import ctre
 
         class DriveTrain(SubsystemBase):
             def __init__(self) -> None:
@@ -197,8 +210,8 @@ The high-level steps that you will take to make this happen are:
                 '''Use the member variable _diffdrive to set the left and right side motors based on the inputs. The third argument being passed in true represents whether or not we should allow the robot to turn in place or not'''
                 wheelSpeeds = wpilib.drive.DifferentialDrive.arcadeDriveIK(forward, turn, True)
                 
-                self._leftMotor.set(wheelSpeeds.left)
-                self._rightMotor.set(wheelSpeeds.right)
+                self._left_leader.set(wheelSpeeds.left)
+                self._right_leader.set(wheelSpeeds.right)
 
                 self._lastLeftSet = wheelSpeeds.left
                 self._lastRightSet = wheelSpeeds.right
@@ -206,4 +219,114 @@ The high-level steps that you will take to make this happen are:
 
     With the ***Drivetrain*** fully formed now, we can move on to the next steps which are: Creating the Operator Interface and Creating the *Commands* to drive our ***Drivetrain Subsystem***.
 
-1. To create the ***Operator Interface*** for the robot, we're going to program the bot to be controlled by a gamepad, one that resembles the button layout common to the Xbox controllers.  This means the four main buttons will be A, B, X, Y configured in a diamond formation on the right hand side of the controller.  We are going to program the robot to drive in ***ArcadeDrive*** mode, which means that the forward/back translation movement will come from the thumbstick on the left side of the controller, and the side to side turn (or Yaw) will come from the thumbstick on the right hand side.
+1. To create the ***Operator Interface*** for the robot, we're going to program the bot to be controlled by a gamepad. ***Operator Interface*** is a fancy way to say how the human will control the robot. This ***Operator Interface*** will use a gampepad that resembles the button layout common to the Xbox controllers.  This means the four main buttons will be A, B, X, Y configured in a diamond formation on the right hand side of the controller.  We are going to program the robot to drive in ***ArcadeDrive*** mode, which means that the forward/back translation movement will come from the thumbstick on the left side of the controller, and the side to side turn (or Yaw) will come from the thumbstick on the right hand side.
+    1. The first step in the ***Operator Interface*** will be creating the controller object to be used. To do this, open the ***robot.py*** file in VS Code.  (Click on the file on the left in the Solution Explorer and it should open up)
+    1. Add the import statement to include the ***CommandXboxController*** code from the commands v2 library
+        ```python
+        #!/usr/bin/env python3
+        import wpilib
+        from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand
+        from commands2.button import CommandXboxController
+        ```
+    1. Find the ***robotInit()*** method defined in the file, should be somewhere in the range of line 8. Find the commented line that references setting up the Operator Interface, and one line below that add the contructor call for the *CommandXboxController* object and assign it to a variable named ***_driver_controller***. See the following code example on how to perform this action.
+        ```python
+        #!/usr/bin/env python3
+        import wpilib
+        from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand
+        from commands2.button import CommandXboxController
+
+        import drivetrain
+
+        class MyRobot(TimedCommandRobot):
+            ''' Class that defines the totality of our Robot'''
+
+            def robotInit(self) -> None:
+                '''
+                This method must eventually exit in order to ever have the robot
+                code light turn green in DriverStation. So, this will create an 
+                instance of the Robot that contains all the subsystems,
+                button bindings, and operator interface pieces like driver 
+                dashboards
+                '''
+                
+                # Setup the operator interface (typically CommandXboxController)
+                self._driver_controller = CommandXboxController(0)
+
+                # Instantiate any subystems
+        ```
+    1. Create an instance of our previously created ***Drivetrain*** class. First, import the ***drivetrain.py*** file we created earlier into your ***robot.py*** file. 
+        ```python
+        #!/usr/bin/env python3
+        import wpilib
+        from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand
+        from commands2.button import CommandXboxController
+
+        import drivetrain
+        ```
+    1. Next, call the constructor (or __init__) method for the class and assign it to a variable damed ***_drivetrain***. This all happens in the ***robotInit*** method.
+        ```python
+        #!/usr/bin/env python3
+        import wpilib
+        from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand
+        from commands2.button import CommandXboxController
+
+        import drivetrain
+
+        class MyRobot(TimedCommandRobot):
+            ''' Class that defines the totality of our Robot'''
+
+            def robotInit(self) -> None:
+                '''
+                This method must eventually exit in order to ever have the robot
+                code light turn green in DriverStation. So, this will create an 
+                instance of the Robot that contains all the subsystems,
+                button bindings, and operator interface pieces like driver 
+                dashboards
+                '''
+                
+                # Setup the operator interface (typically CommandXboxController)
+                self._driver_controller = CommandXboxController(0)
+
+                # Instantiate any subystems
+                self._drivetrain = drivetrain.DriveTrain()
+
+        ```
+    1. Now that we have an instantiated ***DriveTrain*** object, we're going to assign it a default command that will try to drive the robot according to the input from the thumbsticks. To do that, we're going to assign a ***DefaultCommand*** to be run on the ***DriveTrain Subsystem***.  Copy the following code and add it to your ***robotInit()*** method:
+        ```python
+        #!/usr/bin/env python3
+        import wpilib
+        from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand
+        from commands2.button import CommandXboxController
+
+        import drivetrain
+        class MyRobot(TimedCommandRobot):
+        ''' Class that defines the totality of our Robot'''
+
+            def robotInit(self) -> None:
+                '''
+                This method must eventually exit in order to ever have the robot
+                code light turn green in DriverStation. So, this will create an 
+                instance of the Robot that contains all the subsystems,
+                button bindings, and operator interface pieces like driver 
+                dashboards
+                '''
+                
+                # Setup the operator interface (typically CommandXboxController)
+                self._driver_controller = CommandXboxController(0)
+
+                # Instantiate any subystems
+                self._drivetrain = drivetrain.DriveTrain()
+
+                # Setup the default commands for subsystems
+                self._drivetrain.setDefaultCommand(
+                    # A split-stick arcade command, with forward/backward controlled by the left
+                    # hand, and turning controlled by the right.
+                    RunCommand(
+                        lambda: self._drivetrain.driveManually(
+                            self._driver_controller.getRawAxis(0),
+                            self._driver_controller.getRawAxis(1),
+                        ),
+                        [self._drivetrain],
+                    )
+                )
+        ```

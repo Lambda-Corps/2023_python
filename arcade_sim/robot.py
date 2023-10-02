@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import wpilib
-from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand
+from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand
+from commands2.button import CommandXboxController
+import navx
 
+import drivetrain
 class MyRobot(TimedCommandRobot):
     ''' Class that defines the totality of our Robot'''
 
@@ -13,12 +16,11 @@ class MyRobot(TimedCommandRobot):
         button bindings, and operator interface pieces like driver 
         dashboards
         '''
+        self._gyro = navx.AHRS.create_spi()
+
         # Setup the operator interface (typically CommandXboxController)
 
         # Instantiate any subystems
-        self._drivetrain = None
-
-        # Map the button bindings for the driver
 
         # Setup the default commands for subsystems
 
