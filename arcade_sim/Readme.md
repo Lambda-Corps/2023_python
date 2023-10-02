@@ -297,6 +297,7 @@ The high-level steps that you will take to make this happen are:
         import wpilib
         from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand
         from commands2.button import CommandXboxController
+        import navx
 
         import drivetrain
         class MyRobot(TimedCommandRobot):
@@ -310,7 +311,8 @@ The high-level steps that you will take to make this happen are:
                 button bindings, and operator interface pieces like driver 
                 dashboards
                 '''
-                
+                self._gyro = navx.AHRS.create_spi()
+
                 # Setup the operator interface (typically CommandXboxController)
                 self._driver_controller = CommandXboxController(0)
 
