@@ -6,6 +6,9 @@ For this step-by-step set of instructions to work, the user must have followed t
 * Installed Python on their host system
 * Installed VS Code (or other IDE for development)
 * This repository has been cloned (or copied) to the target system
+* The extra Python libraries have been installed -- RobotPy, Robotpy[ctre], Robotpy[navx], and Robotpy[commands2]
+    * Windows - py -3 -m pip install -U robotpy[ctre,navx,commands2]
+    * Mac OS - python3 -m pip isntall -U robotpy[ctre,navx,commands2]
 
 # Get Started 
 The first step is to verify that the system setup is functional.  In this section you will get your IDE setup and open to the right location, verify the simulator properly executes.  If successful, upon executing the python script the WPILib Simulator User Interface (Glass) will open on the host system and the terminal window in VS Code will have output that shows some debugging information.  If it fails, there will be a Python traceback error with some information about what went wrong.
@@ -89,12 +92,13 @@ The high-level steps that you will take to make this happen are:
             def __init__(self) -> None:
                 super().__init__()
 
-                self._leftMotor = wpilib.PWMSparkMax(1)
-                self._rightMotor = wpilib.PWMSparkMax(2)
+                self._left_leader = ctre.WPI_TalonFX(1)
+                self._right_leader = ctre.WPI_TalonFX(2)
         ```
 
 
-    1. For the simulator (and the real robot to work) we need to track the kinematics of our robot.  Kinematics is a fancy word that means the study of motion, but motion without accounting for physical factors like mass, gravity, etc. In this code, we want the simulator to draw on the screen where our robot _would_ be if we applied certain inputs to it. To make this happen, we are going to declare two variables that track the left and right speeds of our Differential Drive robot. Along with tracking these variables, we are going to then define two functions that make these variables accessible to the rest of our robot structure as well. These variables have nothing to do with _making_ the robot move.  Just tracking the variables _used_ to make the robot move. 
+    1. For the simulator (and the real robot to work) we need to track the kinematics of our robot.  Kinematics is a fancy word that means the study of motion, but motion without accounting for physical factors like mass, gravity, etc. In this code, we want the simulator to draw on the screen where our robot _would_ be if we applied certain inputs to it. To make this happen, we are going to declare two variables that track the left and right speeds of our Differential Drive robot. Along with tracking these variables, we are going to then define two functions that make these variables accessible to the rest of our robot structure as well. These variables have nothing to do with _making_ the robot move.  Just tracking the variables _used_ to make the robot move.
+        * Import the relavant motor controller code (i.e. import ctre library) 
         * Add two instance variables called ***lastLeftSet*** and ***lastRightSet*** to track the motor set speeds inside of the *init* method.
         * Add two methods called ***getLeftSpeed*** and ***getRightSpeed*** that return a type float (a decimal number) representing the output percentage applied to the motors on each side of the robot
 
@@ -102,27 +106,60 @@ The high-level steps that you will take to make this happen are:
         import wpilib
         from commands2 import SubsystemBase
         import wpilib.drive
+        import ctre
 
         class DriveTrain(SubsystemBase):
             def __init__(self) -> None:
                 super().__init__()
 
-                self._leftMotor = wpilib.PWMSparkMax(1)
-                self._rightMotor = wpilib.PWMSparkMax(2)
+                self._left_leader = ctre.WPI_TalonFX(1)
+                self._right_leader = ctre.WPI_TalonFX(2)
 
                 self._lastLeftSet = 0.0
                 self._lastRightSet = 0.0
 
             
-            def getLetfSpeed(self) -> float:
+            def getLeftSpeed(self) -> float:
                 return self._lastLeftSet
 
 
             def getRightSpeed(self) -> float:
                 return self._lastRightSet
         ```
+    1. Now we need to configure the motor controllers to do what we want.  The first step is to set the configuration back to the factory default.  This ensures the controllers are configured as we run them, and we're never running older configurations on the devices.
+        ```python
+        import wpilib
+        from commands2 import SubsystemBase
+        import wpilib.drive
+        import ctre
+
+        class DriveTrain(SubsystemBase):
+            def __init__(self) -> None:
+                super().__init__()
+
+                self._left_leader = ctre.WPI_TalonFX(1)
+                self._right_leader = ctre.WPI_TalonFX(2)
+
+                # Factory default the motor controllers
+                self._left_leader.configFactoryDefault()
+                self._right_leader.configFactoryDefault()
+                # Motor are mounted opposite of each other, so one needs to run "backward" to make the robot move
+                # in the direction we want.
+                self._right_leader.setInverted(ctre.TalonFXInvertType.Clockwise)
+                self._left_leader.setInverted(ctre.TalonFXInvertType.CounterClockwise)
+
+                self._lastLeftSet = 0.0
+                self._lastRightSet = 0.0
+
+            
+            def getLeftSpeed(self) -> float:
+                return self._lastLeftSet
 
 
+            def getRightSpeed(self) -> float:
+                return self._lastRightSet
+        ```
+        
     1. Next, we'll define a method that will but used by other parts of our robot code that will take two numbers and inputs from the joysticks, and make the robot move in the given direction based on those inputs. The method will be called ***driveManually*** and take two arguments, one argument to represent the percentage of motor output in the forward and backward directions, and one argument to represent the percentage of output for the robot rotation around the Z Axis. Think of viewing the robot from above, the rotation will have the robot spin in place either clockwise or counterclockwise depending on the sign of the number put in (either positive or negative number). The arguments will be of type _float_ which means it will be a number that can b represented as a decimal. The inputs for both forward and turning directions have the range of -1.0 <-> 1.0 (-100% to 100%). This will be done by calculating the robot kinematics of an arcadeDrive set of outputs based on those inputs. This means that given the two inputs representing the forward and turning speeds, calculate the output that would be applied to the left and right sides to make that move happen.
         ```python
         import wpilib
@@ -133,11 +170,27 @@ The high-level steps that you will take to make this happen are:
             def __init__(self) -> None:
                 super().__init__()
 
-                self._leftMotor = wpilib.PWMSparkMax(1)
-                self._rightMotor = wpilib.PWMSparkMax(2)
+                self._left_leader = ctre.WPI_TalonFX(1)
+                self._right_leader = ctre.WPI_TalonFX(2)
+
+                # Factory default the motor controllers
+                self._left_leader.configFactoryDefault()
+                self._right_leader.configFactoryDefault()
+                # Motor are mounted opposite of each other, so one needs to run "backward" to make the robot move
+                # in the direction we want.
+                self._right_leader.setInverted(ctre.TalonFXInvertType.Clockwise)
+                self._left_leader.setInverted(ctre.TalonFXInvertType.CounterClockwise)
 
                 self._lastLeftSet = 0.0
                 self._lastRightSet = 0.0
+
+            
+            def getLeftSpeed(self) -> float:
+                return self._lastLeftSet
+
+
+            def getRightSpeed(self) -> float:
+                return self._lastRightSet
 
             
             def driveManually(self, forward: float, turn: float):
@@ -150,3 +203,7 @@ The high-level steps that you will take to make this happen are:
                 self._lastLeftSet = wheelSpeeds.left
                 self._lastRightSet = wheelSpeeds.right
         ```
+
+    With the ***Drivetrain*** fully formed now, we can move on to the next steps which are: Creating the Operator Interface and Creating the *Commands* to drive our ***Drivetrain Subsystem***.
+
+1. To create the ***Operator Interface*** for the robot, we're going to program the bot to be controlled by a gamepad, one that resembles the button layout common to the Xbox controllers.  This means the four main buttons will be A, B, X, Y configured in a diamond formation on the right hand side of the controller.  We are going to program the robot to drive in ***ArcadeDrive*** mode, which means that the forward/back translation movement will come from the thumbstick on the left side of the controller, and the side to side turn (or Yaw) will come from the thumbstick on the right hand side.
