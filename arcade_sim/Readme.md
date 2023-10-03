@@ -329,3 +329,25 @@ The high-level steps that you will take to make this happen are:
                     )
                 )
         ```
+
+## Testing the Code
+With the code now complete, you should be able to simulate running the code on the system and control the robot with the keyboard. To perform these steps, you'll simulate the robot code, enable the teleop control of the robot, and use the keyboard to control the robot driving.
+1. Simulate the robot code for testing.
+    * Mac OS 
+        ```
+        python3 robot.py sim
+        ```
+    * Windows
+        ```
+        py -3 robot.py sim
+        ```
+    * You should see the Glass UI open up as you saw before, and in your terminal output something related to the Robot Program successfully starting up.  If there are any error messages, read the error to find both the error type and which line in one of your files caused the error.
+1. Verify the keyboard input has been assigned properly to the ***Joystick[0]*** slot in the **Joysticks** window.  When you push the W, A, S, or D keys, you should see axis values changing.
+1. Enable the robot in ***Teleoperated*** mode. This will enable the robot to move around the 2-dimensional field that we setup in the earlier steps.
+    * To enable the robot, click on the word ***Teleoperated*** in the **Robot State** window in the Glass UI.
+1. Once enabled, use the W, A, S, and D keys on the keyboard to drive the robot around the field.  
+    * W - Move the robot forward (to the right on the screen)
+    * S - Move the robot backward (to the left of the screen)
+    * A - Move the robot left (upwards of the screen)
+    * D - Move the robot right (downwards of the screen)
+    
