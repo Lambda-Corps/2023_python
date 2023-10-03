@@ -28,6 +28,9 @@ The first step is to verify that the system setup is functional.  In this sectio
 1. Add the simulator field to the Glass UI by clicking on the top menu bar NetworkTables -> Smartdashboard -> Field
     * You should see a black window with a an orange rectangle representing the boundaries of the field.
     * You should also see on the bottom left a red square with a yellow triangle inside representing a robot
+1. To control the robot in the simulator, you need to assign a Keyboard to one of the ***Joysticks*** slots. Within the Glass UI, you will see a small sub-window called **System Joysticks** and one called **Joysticks**. To assign the Joystick, click on the item and drag it to Keyboard slot 0.
+    * On this system where the instructions were written, in the System Joysticks window there is a line that says ***16: Keyboard 0***, yours may be different.  Click on it with the mouse, drag it to the column titled ***Joystick[0]***.
+    * After successfully completing this step, if you hold down W, A, S, or D keys on the keyboard, you should see the values next to the ***Axis[0]*** and ***Axis[1]*** change between -1 and 1.  The W represents pressing an Xbox style gamepad's left thumbstick forward, the S represents pressing the left thumbstick backward. The A represents pressing the right thumbstick to the left, and the D key represents pressing the thumbstick to the right.
 1. Close the simulor by clicking on the ***X*** at the top of the window.
     * In the terminal output you should see a debug print statement indicating that the robot code exited cleanly.
     ```
@@ -67,7 +70,6 @@ The high-level steps that you will take to make this happen are:
         ```
     1. To make this class useful, we need to create a constructor to build a DriveTrain instance. The code snippet below shows the python code that both declares the class definition, and the constructor method. Each line is preceded by a code comment (words enclosed between an opening and closing set of single quotes ''') that explains some more detail.  The actual code you write does not need to include the comment text to be functional, though including it will not affect the behavior either as comments are ignored at execution time.
         ```python
-        ...
         '''The following line defines a class called DriveTrain, that will inherit the data and methods from it's parent class of Subsystembase. When being used, the Scheduler will call various periodic methods that it knows about based on the fact that our DriveTrain is an instance of a Subsystem.  Methods such as periodic() will be called in the scheduler loop every 20 ms (or 50Hz, or 50 times a second)'''
         class DriveTrain(SubsystemBase):
             '''The following line defines a constructor method called __init__ that is used to create the instance of the DriveTrain class. Every class method is defined with an argument of the instance, most of the time called 'self' (referring to _this_ DriveTrain specifically). This constructor receives no other arguments to be used to customize it's behavior.  The return value of __init__ is None (or null), by virtue of having the -> None before the end of the method declaration (the ':' character) '''
@@ -169,9 +171,6 @@ The high-level steps that you will take to make this happen are:
                 return self._lastRightSet
         ```
     
-    1. Import the ***wpilib.drive*** library to use in our code.  We're going to use it to help calculate the motor output.
-        ```python
-        import wpilib.drive
     1. Next, we'll define a method that will but used by other parts of our robot code that will take two numbers and inputs from the joysticks, and make the robot move in the given direction based on those inputs. The method will be called ***driveManually*** and take two arguments, one argument to represent the percentage of motor output in the forward and backward directions, and one argument to represent the percentage of output for the robot rotation around the Z Axis. Think of viewing the robot from above, the rotation will have the robot spin in place either clockwise or counterclockwise depending on the sign of the number put in (either positive or negative number). The arguments will be of type _float_ which means it will be a number that can b represented as a decimal. The inputs for both forward and turning directions have the range of -1.0 <-> 1.0 (-100% to 100%). This will be done by calculating the robot kinematics of an arcadeDrive set of outputs based on those inputs. This means that given the two inputs representing the forward and turning speeds, calculate the output that would be applied to the left and right sides to make that move happen.
         ```python
         import wpilib
@@ -234,8 +233,6 @@ The high-level steps that you will take to make this happen are:
         import wpilib
         from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand
         from commands2.button import CommandXboxController
-
-        import drivetrain
 
         class MyRobot(TimedCommandRobot):
             ''' Class that defines the totality of our Robot'''
