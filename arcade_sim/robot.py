@@ -4,7 +4,6 @@ from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand
 from commands2.button import CommandXboxController
 import navx
 
-import drivetrain
 class MyRobot(TimedCommandRobot):
     ''' Class that defines the totality of our Robot'''
 
@@ -21,6 +20,7 @@ class MyRobot(TimedCommandRobot):
         # Setup the operator interface (typically CommandXboxController)
 
         # Instantiate any subystems
+        self._drivetrain = None
 
         # Setup the default commands for subsystems
 
