@@ -36,3 +36,129 @@ _____________|                             |________________
         Button Pressed              Button Released          
 ```
 If the diagram above is viewed with a wide enough view, the lines of the events on the button and their respective Trigger Events should all line up nicely.  Starting from the bottom of the diagram, there are three different events that happen.  The Button on a controller is pressed down, it is held down for some amount of time, and ultimately the button is released.  Imagine looking down at a controller (like an Xbox controller) and seeing the green A button.  We'll use that as a reference.  When I press the A Button on the controller, the Trigger signal is *raised*, and the condition ***onTrue*** becomes triggered. For as long as I hold the button down the Trigger signal remains *raised*, and the condition ***whileTrue*** remains triggered, however the ***onTrue*** signal is no longer triggered. When I release the button on the controller, the Trigger signal *falls*, and the condition ***onFalse*** becomes triggered and the ***whileTrue*** trigger ends. As long as nobody else touches the button, the trigger will remain in the ***False*** state an nothing will happen on the robot.
+
+## Command Composition
+There are two ways to define comamnds to be used by **Subsystems**: In-line, or class definition.  Defining Commands inline means that in the ***Subsystem*** file, you'll make a function that returns a CommandBase object. Defining commands in a class file means that you'll create a class definition with all the appropriate lifecycle methods.
+
+Before you start working on the lesson, [read through BoVLB's FRC command tips](https://bovlb.github.io/frc-tips/commands). That site shows you all the lifecycle methods, explains how the ***Scheduler*** works, as well as more complex topics like ***Command Groups***.
+
+### Class file definitions
+To define your command class, you will need follow the following steps:
+1. Create a new file called ***drivetrain_default.py***
+1. Define the class by giving it a name, and inheriting from the **CommandBase** class.
+1. Implement the constructor, ensuring that you add the **Subsystem** requirements for the scheduler.
+1. Define and implement the lifecycle methods: initialize, execute, isFinished, and end.
+1. Assign the default command 
+
+For the exercise, we're going to define a command to be assigned as the ***Default Command*** for the drivetrain. This command is going to take input from the controller joysticks, and apply that to the motor from -100% to 100% (e.g. -1.0 to 1.0). Because this is the default command, we don't want it to ever end, we want it to be running at all times when ***no other commands are scheduled to run***.
+
+1. Create the new file ***drivetrain_default.py*** either by right-clicking on solution explorer and choosing "New File" or click File->New File and in the window that appears at the top choose "Python File".
+1. At the top of the file, import the two WPILib classes that we're going to use: *CommandBase* and *CommandXboxController*
+    ```python
+    from commands2 import CommandBase
+    from commands2.button import CommandXboxComtroller
+    ```
+1. Now define the class we're creating
+    ```python
+    from commands2 import CommandBase
+    from commands2.button import CommandXboxComtroller
+
+    class DefaultDrivetrainCommand(CommandBase):
+    ```
+1. Next define the constructor method that will initialize the instance of the DefaultDriveTrain command.
+    ```python
+    from commands2 import CommandBase
+    from commands2.button import CommandXboxComtroller
+
+    class DefaultDrivetrainCommand(CommandBase):
+        def __init__(self, dt: DriveTrain, driver_controller: CommandXboxController):
+            # To make sure our child class is fully intitialized, we make sure to call the 
+            # parent class constructor first.  Then we initialize our own object to be used 
+            # later on.
+            super().__init__()
+
+            # We received a Drivetrain and a CommandXboxController as arguments to the constructor
+            # so we want to make sure we store those objects as our own for future use.
+            self._dt = dt
+            self._driver_controller = driver_controller
+
+            # Tell the scheduler that this command requires exclusive access to the Drivetrain
+            # subsystem that was passed in
+            self.addRequirements(self._dt)
+    ```
+1. Finish the class by implementing all the lifecycle methods the **Scheduler** needs to call to make our command function on the robot.
+    ```python
+    from commands2 import CommandBase
+    from commands2.button import CommandXboxComtroller
+
+    class DefaultDrivetrainCommand(CommandBase):
+        def __init__(self, dt: DriveTrain, driver_controller: CommandXboxController):
+            # To make sure our child class is fully intitialized, we make sure to call the 
+            # parent class constructor first.  Then we initialize our own object to be used 
+            # later on.
+            super().__init__()
+
+            # We received a Drivetrain and a CommandXboxController as arguments to the constructor
+            # so we want to make sure we store those objects as our own for future use.
+            self._dt = dt
+            self._driver_controller = driver_controller
+
+            # Tell the scheduler that this command requires exclusive access to the Drivetrain
+            # subsystem that was passed in
+            self.addRequirements(self._dt)
+
+        
+        def initialize(self) -> None:
+            # There isn't anything we need to do to when this command gets scheduled.
+            # This command will only respond to the joysticks and set the motors accordingly
+            pass # Python way of doing 'nothing'
+    
+
+        def execute(self) -> None:
+            # Collect the joystick inputs and apply them to the motors
+            forward_speed = self._driver_controller.getRawAxis(0)
+            turn_speed = self._driver_controller.getRawAxis(1)
+
+            # Tell the Drivetrain to drive the motors
+            self._dt.driveManually(forward_speed, turn_speed)
+        
+
+        def isFinished(self) -> bool:
+            # We don't want this command to end, so we'll always return False when the 
+            # scheduler asks us if we're done
+            return False
+        
+
+        def end(self, interrupted: bool) -> None:
+            # If for some reason we end, at least stop the motors from driving the robot
+            self._dt.driveManually(0,0)
+    ```
+1. Save the file, make sure the file is named ***default_drivetrain.py***.
+
+1. Open the ***robot.py*** file by clicking on it in the Solution Explorer on the left-hand side.
+
+1. Import the newly created class in the top of the file by adding the line
+    ```python
+    from drivetrain_default import DefaultDrivetrainCommand
+    ```
+
+1. Locate the following lines of code (near line 28):
+    ```python
+        # Setup the default commands for subsystems
+        self._drivetrain.setDefaultCommand(
+            # A split-stick arcade command, with forward/backward controlled by the left
+            # hand, and turning controlled by the right.
+            RunCommand(
+                lambda: self._drivetrain.driveManually(
+                    self._driver_controller.getRawAxis(0),
+                    self._driver_controller.getRawAxis(1),
+                ),
+                self._drivetrain,
+            )
+        )
+    ```
+1. Replace those lines with the following code that will use our new class
+    ```python
+        # Setup the default commands for subsystems
+        self._drivetrain.setDefaultCommand(DefaultDrivetrainCommand(self._drivetrain, self._driver_controller))
+    ```
