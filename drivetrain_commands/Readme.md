@@ -53,22 +53,28 @@ To define your command class, you will need follow the following steps:
 For the exercise, we're going to define a command to be assigned as the ***Default Command*** for the drivetrain. This command is going to take input from the controller joysticks, and apply that to the motor from -100% to 100% (e.g. -1.0 to 1.0). Because this is the default command, we don't want it to ever end, we want it to be running at all times when ***no other commands are scheduled to run***.
 
 1. Create the new file ***drivetrain_default.py*** either by right-clicking on solution explorer and choosing "New File" or click File->New File and in the window that appears at the top choose "Python File".
-1. At the top of the file, import the two WPILib classes that we're going to use: *CommandBase* and *CommandXboxController*
+1. At the top of the file, import the two WPILib classes that we're going to use: *CommandBase* and *CommandXboxController*, as well as the DriveTrain class
     ```python
     from commands2 import CommandBase
-    from commands2.button import CommandXboxComtroller
+    from commands2.button import CommandXboxController
+
+    from drivetrain import DriveTrain
     ```
 1. Now define the class we're creating
     ```python
     from commands2 import CommandBase
-    from commands2.button import CommandXboxComtroller
+    from commands2.button import CommandXboxController
+
+    from drivetrain import DriveTrain
 
     class DefaultDrivetrainCommand(CommandBase):
     ```
 1. Next define the constructor method that will initialize the instance of the DefaultDriveTrain command.
     ```python
     from commands2 import CommandBase
-    from commands2.button import CommandXboxComtroller
+    from commands2.button import CommandXboxController
+
+    from drivetrain import DriveTrain
 
     class DefaultDrivetrainCommand(CommandBase):
         def __init__(self, dt: DriveTrain, driver_controller: CommandXboxController):
@@ -90,6 +96,8 @@ For the exercise, we're going to define a command to be assigned as the ***Defau
     ```python
     from commands2 import CommandBase
     from commands2.button import CommandXboxComtroller
+
+    from drivetrain import DriveTrain
 
     class DefaultDrivetrainCommand(CommandBase):
         def __init__(self, dt: DriveTrain, driver_controller: CommandXboxController):
@@ -117,8 +125,8 @@ For the exercise, we're going to define a command to be assigned as the ***Defau
         def execute(self) -> None:
             # Collect the joystick inputs and apply them to the motors.  Motors are counter-clockwise positive
             # so invert the joystick values to make sure that left goes left, right goes right.
-            forward_speed = -self._driver_controller.getRawAxis(0)
-            turn_speed = -self._driver_controller.getRawAxis(1)
+            forward_speed = self._driver_controller.getRawAxis(0)
+            turn_speed = self._driver_controller.getRawAxis(1)
 
             # Tell the Drivetrain to drive the motors
             self._dt.driveManually(forward_speed, turn_speed)
@@ -140,7 +148,7 @@ For the exercise, we're going to define a command to be assigned as the ***Defau
 
 1. Import the newly created class in the top of the file by adding the line
     ```python
-    from drivetrain_default import DefaultDrivetrainCommand
+    from default_drivetrain import DefaultDrivetrainCommand
     ```
 
 1. Locate the following lines of code (near line 28):
