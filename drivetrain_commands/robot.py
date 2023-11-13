@@ -63,10 +63,6 @@ class MyRobot(TimedCommandRobot):
 
         if( self._auto_command is not None):
             self._auto_command.schedule()
-
-
-    def getSpeeds(self) -> List[float]:
-        return [0.0, 0.0] if self._drivetrain is None else self._drivetrain.getSpeeds()
     
 
     def disabledPeriodic(self) -> None:
@@ -83,9 +79,6 @@ class MyRobot(TimedCommandRobot):
 
     def teleopPeriodic(self) -> None:
         return super().teleopPeriodic()
-    
-    def update_sensor_odometry(self, left_pos: float, left_vel: float, right_pos: float, right_vel: float) -> None:
-        self._drivetrain.update_dt_odometry(left_pos, left_vel, right_pos, right_vel)
 
 
 if __name__ == "__main__":

@@ -46,33 +46,11 @@ class DriveTrain(SubsystemBase):
         self._left_leader.setSelectedSensorPosition(0)
         self._right_leader.setSelectedSensorPosition(0)
 
-        self._lastLeftSet = 0.0
-        self._lastRightSet = 0.0
-
-        self._left_motor_sim = None
-        self._right_motor_sim = None
-
         if wpilib.RobotBase.isSimulation():
             self._left_motor_sim = self._left_leader.getSimCollection()
             self._right_motor_sim = self._right_leader.getSimCollection()
 
 
-    def update_dt_odometry(self, left_pos: float, left_vel: float, right_pos: float, right_vel: float) -> None:
-        ''' Receive the positions and velocities from the simulation in feet
-                Convert the units to encoder ticks, and set the simulation sensors 
-        '''
-        if self._left_motor_sim is not None:
-            self._left_motor_sim.setIntegratedSensorRawPosition(self.feet_to_encoder_ticks(left_pos))
-            self._left_motor_sim.setIntegratedSensorVelocity(self.velocity_to_talon_ticks(left_vel))
-
-        if self._right_motor_sim is not None:
-            self._right_motor_sim.setIntegratedSensorRawPosition(self.feet_to_encoder_ticks(right_pos))
-            self._right_motor_sim.setIntegratedSensorVelocity(self.velocity_to_talon_ticks(right_vel))
-
-
-    def getSpeeds(self) -> List[float]:
-        return self._lastLeftSet, self._lastRightSet
-    
     def driveManually(self, forward: float, turn: float):
         '''Use the member variable _diffdrive to set the left and right side motors based on the inputs. The third argument being passed in true represents whether or not we should allow the robot to turn in place or not'''
         wheelSpeeds = wpilib.drive.DifferentialDrive.arcadeDriveIK(forward, turn, True)
@@ -82,14 +60,3 @@ class DriveTrain(SubsystemBase):
 
         self._lastLeftSet = wheelSpeeds.left
         self._lastRightSet = wheelSpeeds.right
-
-
-    def feet_to_encoder_ticks(self, distance_in_feet: float) -> int:
-        return int((distance_in_feet * 12) * self.DT_TICKS_PER_INCH)
-    
-
-    def velocity_to_talon_ticks(self, velocity_in_feet: float) -> int:
-        wheen_rotations_per_second = (velocity_in_feet * 12) / (2 * math.pi * constants.DT_WHEEL_DIAMETER.m_as(units.inch))
-        wheel_rotations_per_100ms = (wheen_rotations_per_second * constants.DT_GEAR_RATIO) / 10
-        motor_rotations_per_100ms = wheen_rotations_per_second * constants.DT_GEAR_RATIO
-        return int(motor_rotations_per_100ms * self.DT_TICKS_PER_MOTOR_REV)
