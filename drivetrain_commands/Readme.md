@@ -44,11 +44,11 @@ Before you start working on the lesson, [read through BoVLB's FRC command tips](
 
 ### Class file definitions
 To define your command class, you will need follow the following steps:
-1. Create a new file called ***drivetrain_default.py***
-1. Define the class by giving it a name, and inheriting from the **CommandBase** class.
-1. Implement the constructor, ensuring that you add the **Subsystem** requirements for the scheduler.
-1. Define and implement the lifecycle methods: initialize, execute, isFinished, and end.
-1. Assign the default command 
+* Create a new file called ***drivetrain_default.py***
+* Define the class by giving it a name, and inheriting from the **CommandBase** class.
+* Implement the constructor, ensuring that you add the **Subsystem** requirements for the scheduler.
+* Define and implement the lifecycle methods: initialize, execute, isFinished, and end.
+* Assign the default command 
 
 For the exercise, we're going to define a command to be assigned as the ***Default Command*** for the drivetrain. This command is going to take input from the controller joysticks, and apply that to the motor from -100% to 100% (e.g. -1.0 to 1.0). Because this is the default command, we don't want it to ever end, we want it to be running at all times when ***no other commands are scheduled to run***.
 
@@ -115,9 +115,10 @@ For the exercise, we're going to define a command to be assigned as the ***Defau
     
 
         def execute(self) -> None:
-            # Collect the joystick inputs and apply them to the motors
-            forward_speed = self._driver_controller.getRawAxis(0)
-            turn_speed = self._driver_controller.getRawAxis(1)
+            # Collect the joystick inputs and apply them to the motors.  Motors are counter-clockwise positive
+            # so invert the joystick values to make sure that left goes left, right goes right.
+            forward_speed = -self._driver_controller.getRawAxis(0)
+            turn_speed = -self._driver_controller.getRawAxis(1)
 
             # Tell the Drivetrain to drive the motors
             self._dt.driveManually(forward_speed, turn_speed)
@@ -162,3 +163,109 @@ For the exercise, we're going to define a command to be assigned as the ***Defau
         # Setup the default commands for subsystems
         self._drivetrain.setDefaultCommand(DefaultDrivetrainCommand(self._drivetrain, self._driver_controller))
     ```
+
+## Timed Driving Commands
+In this section we'll learn both ways of constructing simple commands through inline methods or class definitions. To start, we'll make a class definition of a new command who's purpose will be to drive for an amount of timme and then stop the robot from moving.  To do this we'll perform the following steps:
+* Create a new class called DriveForSeconds
+* Bind that newly defined command to a trigger such that when a button is pressed the robot will drive in a certain direction for a specified amount of time
+
+1. Create the new file ***drivetrain_commands.py*** either by right-clicking on solution explorer and choosing "New File" or click File->New File and in the window that appears at the top choose "Python File".
+
+1. Now put in the import statements for code we need to use for this **Command** and create the class definition
+    ```python
+    from commands2 import CommandBase
+    from wpilib import Timer
+    from drivetrain import DriveTrain
+
+    class DriveForSeconds(CommandBase):
+    ```
+1. Implement the constructor for our **Command**.  This constructor needs to receive a ***DriveTrain*** object, the forward speed (movement on the x axis) and the turning speed (the rotation around the Z axis). Make sure your constructor, calls the parent constructor to ensure the system is stable. Then assign the values passed into the constructor for later use. Next, instantiate a Timer object to track how long we'll be running. Lastly, inform the scheduler that we need exclusive access to the ***DriveTrain*** while we're running.
+    ```python
+    from commands2 import CommandBase
+    from wpilib import Timer
+    from drivetrain import DriveTrain
+
+    class DriveForSeconds(CommandBase):
+        def __init__(self, dt: DriveTrain,runtime: float, forward_speed: float, turn_speed: float):
+            super().__init__()
+            
+            # Store our runtime and speed to be used for each time the command runs
+            self._runtime = runtime
+            self._forward_speed = forward_speed
+            self._turn_speed = turn_speed
+            self._dt = dt
+
+            # Instantiate a timer object to limit our runtime
+            self._timer = Timer()
+            self._timer.reset()
+
+            # Tell the scheduler that this command requires exclusive access to the Drivetrain
+            # subsystem that was passed in to the constructor
+            self.addRequirements(self._dt)
+    ```
+1. To finish defining the class, implement the **Command** lifecycle methods. In the ***initialize()*** method, reset and start the timer counting. In the ***execute()*** method, set the robot to drive according to the stored forward/turn speeds. In the ***end()*** method, turn off the motors.
+    ```python
+        def initialize(self) -> None:
+        # When we schedule the command to run, make sure the timer gets reset to 0 and then start it to initiate timekeeping
+        self._timer.reset()
+        self._timer.start()
+    
+
+        def execute(self) -> None:
+            self._dt.driveManually(self._forward_speed, self._turn_speed)
+        
+
+        def isFinished(self) -> bool:
+            return self._timer.hasElapsed(self._runtime)
+        
+
+        def end(self, interrupted: bool) -> None:
+            if interrupted:
+                print("Command Interrupted") 
+            
+            # When we've completed our run, no matter the reason, stop the motors.
+            self._dt.driveManually(0,0)
+    ```
+
+1. With the ***DriveForSeconds*** comman now defined, open the ***robot.py*** file to actually use it.  Find the bottom of the ***robotInit()*** method to make the button bindings and add the following bindings:
+    ```python
+        # Setup the button bindings
+        # When the driver presses the A() button, drive the robot forward in a straight line at half speed for 3 seconds.
+        self._driver_controller.A().onTrue(DriveForSeconds(self._drivetrain, 3, .5, 0))
+        # When the driver pressexs the B() button, drive the robot backward in a straight line at half speed for 3 seconds.
+        self._driver_controller.B().onTrue(DriveForSeconds(self._drivetrain, 3, -.5, 0))
+    ```
+
+Once completed you should have a robot.py file with a ***robotInit()*** method that looks like the below file and is able to be run in the simulator by typing
+```
+python3 robot.py sim
+```
+
+```python
+def robotInit(self) -> None:
+        '''
+        This method must eventually exit in order to ever have the robot
+        code light turn green in DriverStation. So, this will create an 
+        instance of the Robot that contains all the subsystems,
+        button bindings, and operator interface pieces like driver 
+        dashboards
+        '''
+        self._gyro = navx.AHRS.create_spi()
+
+        # Setup the operator interface (typically CommandXboxController)
+        self._driver_controller = CommandXboxController(0)
+
+        # Instantiate any subystems
+        self._drivetrain = drivetrain.DriveTrain()
+
+
+        # Setup the default commands for subsystems
+        self._drivetrain.setDefaultCommand(DefaultDrivetrainCommand(self._drivetrain, self._driver_controller))
+        self._auto_command = None
+
+        # Setup the button bindings
+        # When the driver presses the A() button, drive the robot forward in a straight line at half speed for 3 seconds.
+        self._driver_controller.A().onTrue(DriveForSeconds(self._drivetrain, 3, .5, 0))
+        # When the driver pressexs the B() button, drive the robot backward in a straight line at half speed for 3 seconds.
+        self._driver_controller.B().onTrue(DriveForSeconds(self._drivetrain, 3, -.5, 0))
+```
