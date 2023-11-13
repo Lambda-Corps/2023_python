@@ -50,6 +50,11 @@ To define your command class, you will need follow the following steps:
 * Define and implement the lifecycle methods: initialize, execute, isFinished, and end.
 * Assign the default command 
 
+### Inline Command Definitions
+An inline command composition is an implementation of a command, without the verbosity of a full class definition. Typically, inline functions will be defined as a method in the subsystem, which has a great benefit of making sure that the subsystem has exclusive access to the subsystem when executing. The only details the programmer needs to remember is the composition itself, and making sure the scheduler knows how/when to kill the command.
+
+# Default Command Exercise
+
 For the exercise, we're going to define a command to be assigned as the ***Default Command*** for the drivetrain. This command is going to take input from the controller joysticks, and apply that to the motor from -100% to 100% (e.g. -1.0 to 1.0). Because this is the default command, we don't want it to ever end, we want it to be running at all times when ***no other commands are scheduled to run***.
 
 1. Create the new file ***drivetrain_default.py*** either by right-clicking on solution explorer and choosing "New File" or click File->New File and in the window that appears at the top choose "Python File".
@@ -172,8 +177,11 @@ For the exercise, we're going to define a command to be assigned as the ***Defau
         self._drivetrain.setDefaultCommand(DefaultDrivetrainCommand(self._drivetrain, self._driver_controller))
     ```
 
-## Timed Driving Commands
-In this section we'll learn both ways of constructing simple commands through inline methods or class definitions. To start, we'll make a class definition of a new command who's purpose will be to drive for an amount of timme and then stop the robot from moving.  To do this we'll perform the following steps:
+# Timed Driving Commands Exercise
+In this section we'll learn both ways of constructing simple commands through inline methods or class definitions. The first step will be to define a command that runs at a given speed for an amount of time with a class definition file. After that, we'll do the same behavior, but with inline composition methods instead.
+
+## Class Definition Method
+ To start, we'll make a class definition of a new command who's purpose will be to drive for an amount of timme and then stop the robot from moving.  To do this we'll perform the following steps:
 * Create a new class called DriveForSeconds
 * Bind that newly defined command to a trigger such that when a button is pressed the robot will drive in a certain direction for a specified amount of time
 
@@ -280,4 +288,52 @@ def robotInit(self) -> None:
         self._driver_controller.A().onTrue(DriveForSeconds(self._drivetrain, 3, .5, 0))
         # When the driver pressexs the B() button, drive the robot backward in a straight line at half speed for 3 seconds.
         self._driver_controller.B().onTrue(DriveForSeconds(self._drivetrain, 3, -.5, 0))
+```
+
+## Inline Command Composition Method
+To show how this works, we only need to change two lines of code in our ***robotInit()*** method in the ***robot.py*** file.  We'll change the lines that assign commands to the ***A()*** and ***B()*** triggers to inline versions of the same command.  To complete this change, we'll go through the following actions:
+* import necessary code
+* define trigger bindings with lambda expressions
+1. To import the necessary code, we're just going to give ourselves a named reference to the ***cmd*** methods.  Change the line from:
+```python
+from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand
+```
+to
+```python
+from commands2 import TimedCommandRobot, CommandScheduler, Command, PrintCommand, RunCommand, cmd
+```
+Notice all we did was add ***, cmd*** to the end of the line.
+1. Next, setup the trigger bindings with Lamdba expressions.
+```python
+        # Setup the button bindings
+        # When the driver presses the A() button, drive the robot forward in a straight line at half speed for 3 seconds.
+        self._driver_controller.A().onTrue(DriveForSeconds(self._drivetrain, 3, .5, 0))
+        # When the driver pressexs the B() button, drive the robot backward in a straight line at half speed for 3 seconds.
+        self._driver_controller.B().onTrue(DriveForSeconds(self._drivetrain, 3, -.5, 0))
+```
+to become:
+```python
+        # Setup the button bindings
+        # Drive forward at half speed for three seconds
+        self._driver_controller.A().onTrue(
+            cmd.run(
+                lambda: self._drivetrain.driveManually(.5, 0),
+                [self._drivetrain],
+            ).withTimeout(3)
+        )
+        # Drive backward at half speed for three seconds
+        self._driver_controller.B().onTrue(
+            cmd.run(
+                lambda: self._drivetrain.driveManually(-.5, 0),
+                [self._drivetrain],
+            ).withTimeout(3)
+        )
+```
+
+The above example uses a lot of white space and new lines to make sure you the reader can see how the lamdba expression is constructed, though it isn't necessary.  Those lines can be condensed to one-liners that look like this and the behavior is the same:
+```python
+        # Drive forward at half speed for three seconds
+        self._driver_controller.A().onTrue(cmd.run(lambda: self._drivetrain.driveManually(.5, 0),[self._drivetrain],).withTimeout(3))
+        # Drive backward at half speed for three seconds
+        self._driver_controller.B().onTrue(cmd.run(lambda: self._drivetrain.driveManually(-.5, 0),[self._drivetrain],).withTimeout(3))
 ```
