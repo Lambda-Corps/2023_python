@@ -39,10 +39,6 @@ class MyRobot(TimedCommandRobot):
         )
 
         self._auto_command = None
-
-        # Keep track of the linear position of the simulation
-        self._left_position_in_feet = 0
-        self._right_position_in_feet = 0
     
 
     def getAutonomousCommand(self) -> Command:
