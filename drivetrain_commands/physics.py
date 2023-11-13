@@ -69,7 +69,7 @@ class PhysicsEngine:
         self._r_motor.setBusVoltage(wpilib.RobotController.getBatteryVoltage())
 
         # hard code the inversion because CTRE sim ignores inversion
-        self._drivesim.setInputs(self._l_motor.getMotorOutputLeadVoltage(), self._r_motor.getMotorOutputLeadVoltage())
+        self._drivesim.setInputs(-self._l_motor.getMotorOutputLeadVoltage(), self._r_motor.getMotorOutputLeadVoltage())
 
         # advance the simulation model a timing loop
         self._drivesim.update(tm_diff)
@@ -85,7 +85,8 @@ class PhysicsEngine:
         # -> FRC gyros are positive clockwise, but the returned pose is positive
         #    counter-clockwise
         pose = self._drivesim.getPose()
-        self.navx_yaw.set(-pose.rotation().degrees())
+        self.navx_yaw.set(-self._drivesim.getHeading().degrees())
+        # self.navx_yaw.set(-pose.rotation().degrees())
 
         self.physics_controller.field.setRobotPose(pose)
         

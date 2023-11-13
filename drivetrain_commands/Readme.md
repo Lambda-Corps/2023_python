@@ -125,8 +125,8 @@ For the exercise, we're going to define a command to be assigned as the ***Defau
         def execute(self) -> None:
             # Collect the joystick inputs and apply them to the motors.  Motors are counter-clockwise positive
             # so invert the joystick values to make sure that left goes left, right goes right.
-            forward_speed = self._driver_controller.getRawAxis(0)
-            turn_speed = self._driver_controller.getRawAxis(1)
+            forward_speed = -self._driver_controller.getRawAxis(1)
+            turn_speed = -self._driver_controller.getRawAxis(0)
 
             # Tell the Drivetrain to drive the motors
             self._dt.driveManually(forward_speed, turn_speed)
@@ -235,7 +235,11 @@ In this section we'll learn both ways of constructing simple commands through in
             self._dt.driveManually(0,0)
     ```
 
-1. With the ***DriveForSeconds*** comman now defined, open the ***robot.py*** file to actually use it.  Find the bottom of the ***robotInit()*** method to make the button bindings and add the following bindings:
+1. With the ***DriveForSeconds*** comman now defined, open the ***robot.py*** file to actually use it.  At the top of the ***robot.py*** file, import the ***DriveForSeconds*** class
+    ```python
+    from drivetrain_commands import DriveForSeconds
+    ```
+1. Find the bottom of the ***robotInit()*** method to make the button bindings and add the following bindings:
     ```python
         # Setup the button bindings
         # When the driver presses the A() button, drive the robot forward in a straight line at half speed for 3 seconds.

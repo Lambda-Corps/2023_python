@@ -31,8 +31,8 @@ class MyRobot(TimedCommandRobot):
             # hand, and turning controlled by the right.
             RunCommand(
                 lambda: self._drivetrain.driveManually(
-                    self._driver_controller.getRawAxis(0),
-                    self._driver_controller.getRawAxis(1),
+                    -self._driver_controller.getRawAxis(1),
+                    -self._driver_controller.getRawAxis(0),
                 ),
                 self._drivetrain,
             )

@@ -25,10 +25,10 @@ class DriveTrain(SubsystemBase):
         self._right_leader.configFactoryDefault()
         self._right_follower.configFactoryDefault()
 
-        # Motor are mounted opposite of each other, so one needs to run "backward" to make the robot move
+        # # Motor are mounted opposite of each other, so one needs to run "backward" to make the robot move
         # in the direction we want.
-        self._right_leader.setInverted(ctre.TalonFXInvertType.Clockwise)
-        self._left_leader.setInverted(ctre.TalonFXInvertType.CounterClockwise)
+        self._right_leader.setInverted(ctre.TalonFXInvertType.CounterClockwise)
+        self._left_leader.setInverted(ctre.TalonFXInvertType.Clockwise)
 
         # Set the follower motors, and their inversions to match
         self._left_follower.follow(self._left_leader)
