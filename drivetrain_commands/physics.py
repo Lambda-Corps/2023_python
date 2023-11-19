@@ -50,8 +50,8 @@ class PhysicsEngine:
             constants.DT_WHEEL_RADIUS_INCHES,
         )
         # fmt: on
-        self._l_motor = robot._drivetrain._left_leader.getSimCollection()
-        self._r_motor = robot._drivetrain._right_leader.getSimCollection()
+        self._l_motor = robot.drivetrain._left_leader.getSimCollection()
+        self._r_motor = robot.drivetrain._right_leader.getSimCollection()
 
     def update_sim(self, now: float, tm_diff: float) -> None:
         """
