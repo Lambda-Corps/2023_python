@@ -7,13 +7,14 @@ import commands2.button
 
 from subsystems.drivetrain import DriveTrain
 from subsystems.ledsubsystem import LEDSubsystem
+from subsystems.examplesubsystem import ExampleSubsystem  # example 
+from commands.examplecommand import ExampleCommand        # example
 from commands.turntoangle import TurnToAngle
 from commands.autonomouscommand import AutonomousCommand
 from commands.driveforwardxseconds import DriveForwardXSeconds
 # from robotcontainer import RobotContainer
 
 from typing import Tuple, List
-
 
 class MyRobot(TimedCommandRobot):
     ''' Class that defines the totality of our Robot'''
@@ -41,6 +42,7 @@ class MyRobot(TimedCommandRobot):
         # Instantiate any subystems
         self.drivetrain = DriveTrain()
         self.led = LEDSubsystem()
+        self.examplesub = ExampleSubsystem()  # Example subsystem instance
 
 
         # Setup the default commands for subsystems
@@ -89,12 +91,19 @@ class MyRobot(TimedCommandRobot):
         """
 
 
+        # Reference:
+        # Button mapping
+        # https://docs.wpilib.org/en/stable/docs/software/commandbased/binding-commands-to-triggers.html
+        # Simulated button mapping
+        # https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/simulation-gui.html
+
         # Turn to 90 degrees when the 'X' button is pressed, with a 5 second timeout
         commands2.button.JoystickButton(
             # self.driverController, wpilib.PS4Controller.Button.kCross
-            self.drivercontroller, 1).onTrue(TurnToAngle(90, self.drivetrain).withTimeout(5))
-
-        self.drivercontroller.B().onTrue(DriveForwardXSeconds(self.drivetrain,2,1))
+            self.drivercontroller, 4).onTrue(TurnToAngle(90, self.drivetrain).withTimeout(5))
+            
+        self.drivercontroller.X().onTrue(DriveForwardXSeconds(self.drivetrain,2,1))  # button 3 in simulation
+        self.drivercontroller.A().whileTrue(ExampleCommand(45,self.examplesub))         # Example binding, button #1
 
     def getAutonomousCommand(self) -> Command:
         return AutonomousCommand (self.drivetrain,self.led)
